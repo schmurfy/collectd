@@ -131,8 +131,22 @@ static int uc_send_notification (const char *name)
   char *plugin_instance;
   char *type;
   char *type_instance;
+  
+  const char *c_interval_multiplier;
+  int interval_multiplier = 0;
 
   notification_t n;
+  
+  c_interval_multiplier = global_option_get ("ThresholdIntervalMultiplier");
+  if (c_interval_multiplier != NULL)
+  {
+    interval_multiplier = atoi(c_interval_multiplier);
+  }
+  
+  if (interval_multiplier <= 0)
+  {
+    interval_multiplier = 2;
+  }
 
   name_copy = strdup (name);
   if (name_copy == NULL)
@@ -175,7 +189,7 @@ static int uc_send_notification (const char *name)
   }
     
   /* Check if the entry has been updated in the meantime */
-  if ((n.time - ce->last_update) < (2 * ce->interval))
+  if ((n.time - ce->last_update) < (interval_multiplier * ce->interval))
   {
     ce->state = STATE_OKAY;
     pthread_mutex_unlock (&cache_lock);
