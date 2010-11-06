@@ -1,6 +1,6 @@
 /**
  * collectd - src/zeromq.c
- * Copyright (C) 2005-2009  Florian octo Forster
+ * Copyright (C) 2005-2010  Florian octo Forster
  * Copyright (C) 2009       Aman Gupta
  * Copyright (C) 2010       Julien Ammous
  *
