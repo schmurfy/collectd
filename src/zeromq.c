@@ -65,7 +65,7 @@ static _Bool check_receive_okay (const value_list_t *vl) /* {{{ */
   int status;
 
   status = uc_meta_data_get_unsigned_int (vl,
-      "network:time_sent", &time_sent);
+      "zeromq:time_sent", &time_sent);
 
   /* This is a value we already sent. Don't allow it to be received again in
    * order to avoid looping. */
@@ -114,7 +114,7 @@ static int network_dispatch_values (value_list_t *vl, /* {{{ */
     return (-ENOMEM);
   }
 
-  status = meta_data_add_boolean (vl->meta, "network:received", 1);
+  status = meta_data_add_boolean (vl->meta, "zeromq:received", 1);
   if (status != 0)
   {
     ERROR ("network plugin: meta_data_add_boolean failed.");
@@ -125,7 +125,7 @@ static int network_dispatch_values (value_list_t *vl, /* {{{ */
 
   if (username != NULL)
   {
-    status = meta_data_add_string (vl->meta, "network:username", username);
+    status = meta_data_add_string (vl->meta, "zeromq:username", username);
     if (status != 0)
     {
       ERROR ("network plugin: meta_data_add_string failed.");
