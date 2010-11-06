@@ -29,6 +29,10 @@
 #include "utils_cache.h"
 #include "network.h"
 
+/* for htons() */
+#if HAVE_ARPA_INET_H
+# include <arpa/inet.h>
+#endif
 #include <pthread.h>
 #include <zmq.h>
 
