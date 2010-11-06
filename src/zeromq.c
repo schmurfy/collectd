@@ -971,7 +971,7 @@ static int cmq_config_socket (oconfig_item_t *ci) /* {{{ */
   int type;
   int status;
   int i;
-  int connections_num;
+  int endpoints_num;
   void *cmq_socket;
 
   type = cmq_config_mode (ci);
@@ -1013,74 +1013,59 @@ static int cmq_config_socket (oconfig_item_t *ci) /* {{{ */
   }
 
   /* Iterate over all children and do all the binds and connects requested. */
-  connections_num = 0;
+  endpoints_num = 0;
   for (i = 0; i < ci->children_num; i++)
   {
     oconfig_item_t *child = ci->children + i;
 
-    if (strcasecmp ("Bind", child->key) == 0)
+    if (strcasecmp ("Endpoint", child->key) == 0)
     {
       char *value = NULL;
-
-      if ((type == ZMQ_PUB) || (type == ZMQ_PUSH))
-      {
-        ERROR ("zeromq plugin: The \"Bind\" option is not available for "
-            "publish and push sockets. Try \"Connect\".");
-        continue;
-      }
 
       status = cf_util_get_string (child, &value);
       if (status != 0)
         continue;
-
-      status = zmq_bind (cmq_socket, value);
-      if (status != 0)
-      {
-        ERROR ("zeromq plugin: zmq_bind (\"%s\") failed: %s",
-            value, zmq_strerror (errno));
-        continue;
-      }
-
-      connections_num++;
-      continue;
-    } /* Bind */
-
-    if (strcasecmp ("Connect", child->key) == 0)
-    {
-      char *value = NULL;
+      sfree (value);
 
       if ((type == ZMQ_SUB) || (type == ZMQ_PULL))
       {
-        ERROR ("zeromq plugin: The \"Connect\" option is not available for "
-            "subscribe and pull sockets. Try \"Bind\".");
-        continue;
+        status = zmq_bind (cmq_socket, value);
+        if (status != 0)
+        {
+          ERROR ("zeromq plugin: zmq_bind (\"%s\") failed: %s",
+              value, zmq_strerror (errno));
+          continue;
+        }
       }
-
-      status = cf_util_get_string (child, &value);
-      if (status != 0)
-        continue;
-
-      status = zmq_connect (cmq_socket, value);
-      if (status != 0)
+      else if ((type == ZMQ_PUB) || (type == ZMQ_PUSH))
       {
-        ERROR ("zeromq plugin: zmq_connect (\"%s\") failed: %s",
-            value, zmq_strerror (errno));
-        continue;
+        status = zmq_connect (cmq_socket, value);
+        if (status != 0)
+        {
+          ERROR ("zeromq plugin: zmq_connect (\"%s\") failed: %s",
+              value, zmq_strerror (errno));
+          continue;
+        }
+      }
+      else
+      {
+        assert (23 == 42);
       }
 
-      connections_num++;
+      endpoints_num++;
       continue;
-    } /* Connect */
-
-    ERROR ("zeromq plugin: The \"%s\" config option is now allowed here.",
-        child->key);
+    } /* Endpoint */
+    else
+    {
+      ERROR ("zeromq plugin: The \"%s\" config option is now allowed here.",
+          child->key);
+    }
   } /* for (i = 0; i < ci->children_num; i++) */
 
-  if (connections_num == 0)
+  if (endpoints_num == 0)
   {
-    ERROR ("zeromq plugin: No (valid) \"%s\" options were found in this "
-        "\"Socket\" block.",
-        ((type == ZMQ_SUB) || (type == ZMQ_PULL)) ? "Bind" : "Connect");
+    ERROR ("zeromq plugin: No (valid) \"Endpoint\" option was found in this "
+        "\"Socket\" block.");
     (void) zmq_close (cmq_socket);
     return (-1);
   }
@@ -1139,11 +1124,11 @@ static int cmq_config_socket (oconfig_item_t *ci) /* {{{ */
  *
  * <Plugin "zeromq">
  *   <Socket Publish>
- *     Connect "tcp://localhost:6666"
+ *     Endpoint "tcp://localhost:6666"
  *   </Socket>
  *   <Socket Subscribe>
- *     Bind "tcp://eth0:6666"
- *     Bind "tcp://collectd.example.com:6666"
+ *     Endpoint "tcp://eth0:6666"
+ *     Endpoint "tcp://collectd.example.com:6666"
  *   </Socket>
  * </Plugin>
  */
