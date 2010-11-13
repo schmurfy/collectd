@@ -280,6 +280,8 @@ static int cmq_config_socket (oconfig_item_t *ci) /* {{{ */
           zmq_strerror (errno));
       return (-1);
     }
+    
+    INFO("ZeroMQ: Using %d threads", cmq_threads_num);
   }
 
   /* Create a new socket */
