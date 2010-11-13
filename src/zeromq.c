@@ -38,8 +38,6 @@
 #include <pthread.h>
 #include <zmq.h>
 
-// config data
-static char *zmq_send_to = NULL;
 struct cmq_socket_s
 {
 	void *socket;
@@ -57,7 +55,6 @@ static int        sending_sockets_num = 0;
 // private data
 static int thread_running = 1;
 static pthread_t listen_thread_id;
-static void *push_socket = NULL;
 
 static void cmq_close_callback (void *socket) /* {{{ */
 {
@@ -382,45 +379,7 @@ static int plugin_init (void)
 {
   int major, minor, patch;
   zmq_version (&major, &minor, &patch);
-  
-  /* init zeromq (1 I/O thread) */
-  if (cmq_context == NULL)
-    cmq_context = zmq_init(1);
-
-  if( cmq_context == NULL ) {
-    ERROR("zmq_init : %s", zmq_strerror(errno));
-    return 1;
-  }
-  
-  // start send socket
-  if( zmq_send_to != NULL ) {
-    push_socket = zmq_socket(cmq_context, ZMQ_PUSH);
-    
-    if( push_socket == NULL ) {
-      ERROR("zmq_socket : %s", zmq_strerror(errno));
-      return 1;
-    }
-    
-    // and connect to remote host
-    if( zmq_connect(push_socket, zmq_send_to) != 0 ) {
-      ERROR("zmq_connect : %s", zmq_strerror(errno));
-      return 1;
-    }
-    
-    INFO("ZeroMQ pushing to %s", zmq_send_to);
-  }
-  
-  
-  
-  INFO("ZeroMQ plugin initialized (zeromq v%d.%d.%d).", major, minor, patch);
-  return 0;
-}
-
-
-
-static int write_notification (const notification_t *n, user_data_t __attribute__((unused)) *user_data)
-{
-  DEBUG("ZeroMQ: received notification, not implemented yet");
+  INFO("ZeroMQ plugin loaded (zeromq v%d.%d.%d).", major, minor, patch);
   return 0;
 }
 
