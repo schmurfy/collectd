@@ -4572,10 +4572,10 @@ transport layer with can brings interesting features like:
 
 Synopsis:
 
-  <Plugin zeromq>
-    SendDataTo "tcp://localhost:6666"
-    ListenOn "tcp://*:6666"
-  </Plugin>
+ <Plugin "zeromq">
+   SendDataTo "tcp://localhost:6666"
+   ListenOn "tcp://*:6666"
+ </Plugin>
 
 =over 4
 
