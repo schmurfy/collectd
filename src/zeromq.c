@@ -1025,25 +1025,28 @@ static int cmq_config_socket (oconfig_item_t *ci) /* {{{ */
       status = cf_util_get_string (child, &value);
       if (status != 0)
         continue;
-      sfree (value);
 
       if ((type == ZMQ_SUB) || (type == ZMQ_PULL))
       {
+        DEBUG("Binding to %s", value);
         status = zmq_bind (cmq_socket, value);
         if (status != 0)
         {
           ERROR ("zeromq plugin: zmq_bind (\"%s\") failed: %s",
               value, zmq_strerror (errno));
+          sfree (value);
           continue;
         }
       }
       else if ((type == ZMQ_PUB) || (type == ZMQ_PUSH))
       {
+        DEBUG("Connecting to %s", value);
         status = zmq_connect (cmq_socket, value);
         if (status != 0)
         {
           ERROR ("zeromq plugin: zmq_connect (\"%s\") failed: %s",
               value, zmq_strerror (errno));
+          sfree (value);
           continue;
         }
       }
@@ -1051,6 +1054,8 @@ static int cmq_config_socket (oconfig_item_t *ci) /* {{{ */
       {
         assert (23 == 42);
       }
+      
+      sfree (value);
 
       endpoints_num++;
       continue;
@@ -1136,7 +1141,7 @@ static int cmq_config (oconfig_item_t *ci) /* {{{ */
 {
   int status;
   int i;
-
+  
   for (i = 0; i < ci->children_num; i++)
   {
     oconfig_item_t *child = ci->children + i;
@@ -1229,9 +1234,8 @@ void module_register (void)
 {
   plugin_register_complex_config("zeromq", cmq_config);
   plugin_register_init("zeromq", plugin_init);
-  plugin_register_write("zeromq", write_value,
-      /* user_data = */ NULL);
   plugin_register_notification ("network", write_notification,
       /* user_data = */ NULL);
   plugin_register_shutdown ("zeromq", my_shutdown);
 }
+
